@@ -4,7 +4,7 @@ import json
 import logging
 import os
 
-from api_call import OpenAIClassifier
+from OpenAiClassifier import OpenAIClassifier
 import rules as R
 
 api_classifier = OpenAIClassifier("gpt-5-nano") # has to implement ClassifierInterface
