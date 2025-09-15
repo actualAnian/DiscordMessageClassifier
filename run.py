@@ -72,7 +72,9 @@ async def on_message(message : discord.Message):
     return_message = api_classifier.classify(prompt)
 
     logger.info(f"message: {message.content} got response: {return_message}")
-
+    if return_message["category"] == 0:
+        logger.info(f"message: {message.content} classified as category 0, ignoring")
+        return
     response_data = next((r for r in context["response"] if r["category"] == return_message["category"]), None)
     if response_data == None:
         logger.error(f"response_data is None for category {return_message['category']}")
@@ -93,7 +95,7 @@ async def on_message(message : discord.Message):
     jump_link = forward_message.jump_url
 
     content = (
-        f"You are asking about: {return_message['label']}"
+        f"This is an automated response. If you are asking about: {return_message['label']}"
         f"\n\n"
         f"[Go to FAQ message]({jump_link})"
     )
