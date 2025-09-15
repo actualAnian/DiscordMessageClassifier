@@ -46,6 +46,7 @@ class OpenAIClassifier(ClassifierInterface):
 
     Respond in valid JSON with two keys: "category" (number) and "label" (text).
     Below are some examples of messages and their correct classification.
+
     """
 
         messages = [{ "role": "developer", "content": [{"type": "input_text", "text": system_prompt,}]}]
@@ -58,6 +59,8 @@ class OpenAIClassifier(ClassifierInterface):
         messages.append({"role": "developer", "content": [{"type": "input_text", "text": "--- End of examples ---"}]})
 
         # --- THE REAL MESSAGE TO CLASSIFY ---
+
+        messages.append({"role": "developer", "content": [{"type": "input_text", "text": "Classify the following message into one of the categories. If it is very similar to any example, return the same category."}]})
         messages.append({ "role": "user", "content": [{"type": "input_text", "text": f"Message: {message + ' ' + image_text}"}],})
         return messages
 
