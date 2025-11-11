@@ -7,7 +7,7 @@ import os
 from OpenAiClassifier import OpenAIClassifier
 import rules as R
 
-api_classifier = OpenAIClassifier("gpt-5-nano") # has to implement ClassifierInterface
+api_classifier = OpenAIClassifier("gpt-5-mini", "gpt-5-nano") # has to implement ClassifierInterface
 # ---- CONFIG ----
 config = None
 with open("config.json", "r") as f:
@@ -40,18 +40,20 @@ intents.messages = True
 
 bot = commands.Bot(command_prefix="", intents=intents)
 
-
 @bot.event
 async def on_ready():
     print(f"✅ Logged in as {bot.user}")
 
 @bot.event
 async def on_message(message : discord.Message):
-    if message.author == bot.user:
+    if message.author.bot:
         return
 
-    context = config["servers"][str(message.guild.id)]
-    if R.only_read_specified_channels(message, context["rules"]) == False:
+    context = config["servers"].get(str(message.guild.id))
+    if context is None:
+        return
+    should_be_computed = R.evaluate_expression(context, message)
+    if not should_be_computed:
         return
     logger = get_logger_for_guild(message.guild.id, context["log_file"])
     image_url = None
@@ -64,7 +66,6 @@ async def on_message(message : discord.Message):
             if ext in handled_extensions:
                 image_url = attachment.url
                 logger.info(f"checking image: {image_url}")
-
     if image_url:
         image_text = api_classifier.get_text_from_image_url(image_url)
 
@@ -79,6 +80,11 @@ async def on_message(message : discord.Message):
     if response_data == None:
         logger.error(f"response_data is None for category {return_message['category']}")
         return
+
+    if (context.get("debug_mode")):
+        logger.info(f"DEBUG MODE, message: {message.content} got response: {return_message}")
+        return
+
 
     forward_channel = bot.get_channel(response_data["channel_id"])
     if forward_channel is None:
@@ -99,7 +105,6 @@ async def on_message(message : discord.Message):
         f"\n\n"
         f"[Go to FAQ message]({jump_link})"
     )
-
     await message.reply(content)
 
 

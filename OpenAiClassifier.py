@@ -4,13 +4,14 @@ from openai import OpenAI
 from typing import Dict
 
 class OpenAIClassifier(ClassifierInterface):
-    def __init__(self, model: str):
+    def __init__(self, classification_model: str, image_model: str = "gpt-5-nano"):
         self.client = OpenAI()  # Assumes OPENAI_API_KEY is set
-        self.model = model
+        self.clasification_model = classification_model
+        self.image_model = image_model
 
     def classify(self, message: str) -> Dict:
         response = self.client.responses.create(
-            model=self.model,
+            model=self.clasification_model,
             input=message,
             temperature=1
         )
@@ -23,7 +24,7 @@ class OpenAIClassifier(ClassifierInterface):
     def get_text_from_image_url(self, image_url: str) -> str:
         prompt = "Please read all the text in this image and return it as plain text."
         response = self.client.responses.create(
-            model="gpt-5-nano",
+            model=self.image_model,
             input=[
                 {
                     "role": "user",
@@ -36,7 +37,7 @@ class OpenAIClassifier(ClassifierInterface):
         )
         return response.output_text
     def prepare_prompt(self, message: str, categories, examples, image_text: str = "") -> list:
-        categories_text = "\n".join([f'{c["id"]} – {c["label"]}: {c["description"]}' for c in categories])
+        categories_text = "\n".join([f'{{{c["id"]} – {c["label"]}: {c["description"]}}}' for c in categories])
 
         system_prompt = f"""
     You are a classifier. Classify the message using the text in the message, and choose the most appropriate category.
